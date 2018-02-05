@@ -1,0 +1,6 @@
+﻿version: 1.0.{build}
+before_build:
+- cmd: nuget restore "ASP.NET MVC 5/One.sln"
+build:
+  project: ASP.NET MVC 5/One.sln
+  verbosity: minimal
