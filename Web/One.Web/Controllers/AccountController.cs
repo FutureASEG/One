@@ -3,6 +3,7 @@
     using System;
     using System.Data.Entity.Validation;
     using System.Linq;
+    using System.Security.Principal;
     using System.Threading.Tasks;
     using System.Web;
     using System.Web.Mvc;
@@ -15,7 +16,6 @@
 
     using One.Data.Models;
     using One.Web.ViewModels.Account;
-    using System.Security.Principal;
 
     [Authorize]
     public class AccountController : BaseController

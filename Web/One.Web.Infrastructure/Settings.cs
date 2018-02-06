@@ -88,14 +88,14 @@
             return (T)Convert.ChangeType(value, typeof(T));
         }
 
-        /// <summary>
-        ///     To dynamical replace the appSettings "config:CurrentTheme"
-        ///     Calling function such as Settings.SetValue<string>("config:CurrentTheme", "smart-style-0");
-        /// </summary>
         /// <typeparam name="T">The type of which the value will be converted into and returned.</typeparam>
         /// <param name="key">the key of the theme === config:CurrentTheme .</param>
         /// <param name="value">the value of the theme === smart-style-{0} .</param>
         /// <returns>The value of the entry, or the default value, as the specified type.</returns>
+        /// <summary>
+        ///     To dynamical replace the appSettings "config:CurrentTheme"
+        ///     Calling function such as Settings.SetValue<string>("config:CurrentTheme", "smart-style-0");
+        /// </summary>
         public static T SetValue<T>(string key, string value)
         {
             var config = WebConfigurationManager.OpenWebConfiguration("~");
