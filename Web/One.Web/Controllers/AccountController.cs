@@ -1,16 +1,21 @@
 ﻿namespace One.Web.Controllers
 {
+    using System;
+    using System.Data.Entity.Validation;
     using System.Linq;
     using System.Threading.Tasks;
     using System.Web;
     using System.Web.Mvc;
+    using System.Web.Security;
 
+    using Microsoft.Ajax.Utilities;
     using Microsoft.AspNet.Identity;
     using Microsoft.AspNet.Identity.Owin;
     using Microsoft.Owin.Security;
 
     using One.Data.Models;
     using One.Web.ViewModels.Account;
+    using System.Security.Principal;
 
     [Authorize]
     public class AccountController : BaseController
@@ -60,8 +65,13 @@
         [AllowAnonymous]
         public ActionResult Login(string returnUrl)
         {
-            this.ViewBag.ReturnUrl = returnUrl;
-            return this.View();
+            // We do not want to use any existing identity information
+            this.EnsureLoggedOff();
+
+            // Store the originating URL so we can attach it to a form field
+            var viewModel = new LoginViewModel { ReturnUrl = returnUrl };
+
+            return this.View(viewModel);
         }
 
         // POST: /Account/Login
@@ -75,30 +85,54 @@
                 return this.View(model);
             }
 
-            // This doesn't count login failures towards account lockout
-            // To enable password failures to trigger account lockout, change to shouldLockout: true
-            var result =
-                await
-                this.SignInManager.PasswordSignInAsync(
-                    model.Email,
-                    model.Password,
-                    model.RememberMe,
-                    shouldLockout: false);
-            switch (result)
+            // Verify if a user exists with the provided identity information
+            var user = await this.UserManager.FindByEmailAsync(model.Email);
+
+            // If a user was found
+            if (user != null)
             {
-                case SignInStatus.Success:
-                    return this.RedirectToLocal(returnUrl);
-                case SignInStatus.LockedOut:
-                    return this.View("Lockout");
-                case SignInStatus.RequiresVerification:
-                    return this.RedirectToAction(
-                        "SendCode",
-                        new { ReturnUrl = returnUrl, model.RememberMe });
-                case SignInStatus.Failure:
-                default:
-                    this.ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                    return this.View(model);
+                // This doesn't count login failures towards account lockout
+                // To enable password failures to trigger account lockout, change to shouldLockout: true
+                var result =
+                    await
+                    this.SignInManager.PasswordSignInAsync(
+                        user.UserName,
+                        model.Password,
+                        model.RememberMe,
+                        shouldLockout: false);
+
+                switch (result)
+                {
+                    case SignInStatus.Success:
+                        return this.RedirectToLocal(returnUrl);
+                    case SignInStatus.LockedOut:
+                        return this.View("Lockout");
+                    case SignInStatus.RequiresVerification:
+                        return this.RedirectToAction(
+                            "SendCode",
+                            new { ReturnUrl = returnUrl, model.RememberMe });
+                    case SignInStatus.Failure:
+                    default:
+                        this.ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                        return this.View(model);
+                }
             }
+
+            // No existing user was found that matched the given criteria
+            this.ModelState.AddModelError(string.Empty, "Invalid username or password.");
+
+            // If we got this far, something failed, redisplay form
+            return this.View(model);
+        }
+
+        // GET: /Account/Error
+        [AllowAnonymous]
+        public ActionResult Error()
+        {
+            // We do not want to use any existing identity information
+            this.EnsureLoggedOff();
+
+            return this.View();
         }
 
         // GET: /Account/VerifyCode
@@ -155,7 +189,10 @@
         [AllowAnonymous]
         public ActionResult Register()
         {
-            return this.View();
+            // We do not want to use any existing identity information
+            this.EnsureLoggedOff();
+
+            return this.View(new RegisterViewModel());
         }
 
         // POST: /Account/Register
@@ -166,21 +203,37 @@
         {
             if (this.ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
-                var result = await this.UserManager.CreateAsync(user, model.Password);
-                if (result.Succeeded)
+                var userName = model.Username ?? model.Email;
+                var user = new ApplicationUser { UserName = userName, Email = model.Email };
+
+                // Try to create a user with the given identity
+                try
                 {
-                    await this.SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);
+                    var result = await this.UserManager.CreateAsync(user, model.Password);
 
-                    // For more information on how to enable account confirmation and password reset please visit http://go.microsoft.com/fwlink/?LinkID=320771
-                    // Send an email with this link
-                    // string code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
-                    // var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
-                    // await UserManager.SendEmailAsync(user.Id, "Confirm your account", "Please confirm your account by clicking <a href=\"" + callbackUrl + "\">here</a>");
-                    return this.RedirectToAction("Index", "Home");
+                    if (result.Succeeded)
+                    {
+                        await this.SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);
+
+                        // For more information on how to enable account confirmation and password reset please visit http://go.microsoft.com/fwlink/?LinkID=320771
+                        // Send an email with this link
+                        // string code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
+                        // var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
+                        // await UserManager.SendEmailAsync(user.Id, "Confirm your account", "Please confirm your account by clicking <a href=\"" + callbackUrl + "\">here</a>");
+                        return this.RedirectToLocal();
+                    }
+
+                    this.AddErrors(result);
+
+                    return this.View(model);
                 }
+                catch (DbEntityValidationException ex)
+                {
+                    // Add all errors to the page so they can be used to display what went wrong
+                    this.AddErrors(ex);
 
-                this.AddErrors(result);
+                    return this.View(model);
+                }
             }
 
             // If we got this far, something failed, redisplay form
@@ -204,6 +257,9 @@
         [AllowAnonymous]
         public ActionResult ForgotPassword()
         {
+            // We do not want to use any existing identity information
+            this.EnsureLoggedOff();
+
             return this.View();
         }
 
@@ -413,8 +469,21 @@
         [ValidateAntiForgeryToken]
         public ActionResult LogOff()
         {
+            // First we clean the authentication ticket like always
+            FormsAuthentication.SignOut();
+
+            // Second we clear the principal to ensure the user does not retain any authentication
+            this.HttpContext.User = new GenericPrincipal(new GenericIdentity(string.Empty), null);
+
             this.AuthenticationManager.SignOut(DefaultAuthenticationTypes.ApplicationCookie);
-            return this.RedirectToAction("Index", "Home");
+            return this.RedirectToLocal();
+        }
+
+        // GET: /Account/Lock
+        [AllowAnonymous]
+        public ActionResult Lock()
+        {
+            return this.View();
         }
 
         // GET: /Account/ExternalLoginFailure
@@ -444,6 +513,14 @@
             base.Dispose(disposing);
         }
 
+        private void AddErrors(DbEntityValidationException exc)
+        {
+            foreach (var error in exc.EntityValidationErrors.SelectMany(validationErrors => validationErrors.ValidationErrors.Select(validationError => validationError.ErrorMessage)))
+            {
+                this.ModelState.AddModelError(string.Empty, error);
+            }
+        }
+
         private void AddErrors(IdentityResult result)
         {
             foreach (var error in result.Errors)
@@ -452,13 +529,25 @@
             }
         }
 
-        private ActionResult RedirectToLocal(string returnUrl)
+        private void EnsureLoggedOff()
         {
-            if (this.Url.IsLocalUrl(returnUrl))
+            // If the request is (still) marked as authenticated we send the user to the logout action
+            if (this.Request.IsAuthenticated)
+            {
+                this.LogOff();
+            }
+        }
+
+        private ActionResult RedirectToLocal(string returnUrl = "")
+        {
+            // If the return url starts with a slash "/" we assume it belongs to our site
+            // so we will redirect to this "action"
+            if (!returnUrl.IsNullOrWhiteSpace() && this.Url.IsLocalUrl(returnUrl))
             {
                 return this.Redirect(returnUrl);
             }
 
+            // If we cannot verify if the url is local to our host we redirect to a default location
             return this.RedirectToAction("Index", "Home");
         }
 
