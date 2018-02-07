@@ -59,7 +59,7 @@
       <Project>{048df115-fad9-4bd4-9ba0-d99dfd32a2b2}</Project>
       <Name>One.Data.Models</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\One.Common\One.Common.csproj">
+    <ProjectReference Include="..\..\Common\One.Common\One.Common.csproj">
       <Project>{701f322f-aa01-4ddc-90b6-6935981c1e73}</Project>
       <Name>One.Common</Name>
     </ProjectReference>

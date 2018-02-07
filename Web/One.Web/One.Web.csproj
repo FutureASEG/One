@@ -1122,7 +1122,7 @@
       <Project>{7c950cdc-9587-4b65-a204-988efed17948}</Project>
       <Name>One.Data</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\One.Common\One.Common.csproj">
+    <ProjectReference Include="..\..\Common\One.Common\One.Common.csproj">
       <Project>{701F322F-AA01-4DDC-90B6-6935981C1E73}</Project>
       <Name>One.Common</Name>
     </ProjectReference>
