@@ -7,6 +7,7 @@
         public Configuration()
         {
             this.AutomaticMigrationsEnabled = false;
+            this.AutomaticMigrationDataLossAllowed = false;
         }
 
         protected override void Seed(One.Data.ApplicationDbContext context)

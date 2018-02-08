@@ -197,6 +197,8 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\SmsService.cs" />
     <Compile Include="App_Start\Startup.Auth.cs" />
+    <Compile Include="Areas\Mail\Controllers\InboxController.cs" />
+    <Compile Include="Areas\Mail\MailAreaRegistration.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\AppViewsController.cs" />
     <Compile Include="Controllers\BaseController.cs" />
@@ -489,16 +491,9 @@
     <Content Include="Content\sound\voice_on.mp3" />
     <Content Include="Content\xml\gmap\pins.xml" />
     <Content Include="favicon.ico" />
-    <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
-    <Content Include="fonts\glyphicons-halflings-regular.woff2" />
-    <Content Include="fonts\glyphicons-halflings-regular.woff" />
-    <Content Include="fonts\glyphicons-halflings-regular.ttf" />
-    <Content Include="fonts\glyphicons-halflings-regular.eot" />
     <Content Include="Scripts\app.config.js" />
     <Content Include="Scripts\app.min.js" />
-    <Content Include="Scripts\bootstrap.js" />
-    <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Content\css\your_style.less" />
     <Content Include="Content\data\dataList.json" />
     <Content Include="Content\fonts\fontawesome-webfont.eot" />
@@ -519,6 +514,8 @@
     <Content Include="Content\sound\voice_alert.ogg" />
     <Content Include="Content\sound\voice_off.ogg" />
     <Content Include="Content\sound\voice_on.ogg" />
+    <Content Include="Areas\Mail\Views\web.config" />
+    <Content Include="Areas\Mail\Views\Inbox\Index.cshtml" />
     <None Include="Scripts\jquery-3.3.1.intellisense.js" />
     <Content Include="Scripts\bootstrap\bootstrap.min.js" />
     <Content Include="Scripts\demo.min.js" />
@@ -1140,6 +1137,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Areas\Mail\ViewModels\" />
+    <Folder Include="Areas\Mail\Views\Shared\" />
     <Folder Include="Content\img\realestate\thumbs\" />
   </ItemGroup>
   <PropertyGroup>
